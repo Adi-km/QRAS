@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Date and Shift Input</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
+</head>
+<body>
+    <div>
+        <form action="{{ url_for('process_date_shift', sid=sid) }}" method="post">
+
+            <label for="date">Date:</label>
+            <input type="date" id="date" name="date" required>
+
+            <label for="shift">Shift:</label>
+            <input type="text" id="shift" name="shift">
+
+            <button type="submit">Submit</button>
+
+        </form>
+    </div>
+</body>
+</html>

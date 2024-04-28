@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Page</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='qr.css') }}">
+
+
+
+</head>
+<body>
+    <!--<h1>QR Page</h1>-->
+
+    <div>
+        <img id="qr-code" src="{{ url_for('static', filename='qrcodes/'+sid + '.png') }}" alt="QR Code" style="width: 650px; height: 650px;">
+        <br>
+    <button onclick="closeAndDeleteQRCodes()">Close and Delete QR Codes</button>
+    </div>
+
+</body>
+
+
+
+<!--JavaScript-->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var images = ['{{ url_for("static", filename="qrcodes/"+sid + ".png") }}',
+                      '{{ url_for("static", filename="qrcodes/"+date+pin + ".png") }}',
+                      '{{ url_for("static", filename="qrcodes/"+pin + ".png") }}'];
+        var currentIndex = 0;
+
+        function changeImage() {
+            document.getElementById('qr-code').src = images[currentIndex];
+            currentIndex = (currentIndex + 1) % images.length;
+        }
+
+        setInterval(changeImage, 2500); 
+    });
+    window.addEventListener('beforeunload', function (event) {
+            closeAndDeleteQRCodes();
+        });
+    window.addEventListener('unload', function (event) {
+            closeAndDeleteQRCodes();
+        });
+
+
+
+
+    function closeAndDeleteQRCodes() {
+        // AJAX request to delete QR codes
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '{{ url_for("delete_qr_codes") }}', true);
+        xhr.send();
+        
+        // Redirect to the login page
+        window.location.href = '{{ url_for("index") }}';
+    }
+</script>
+</html>
