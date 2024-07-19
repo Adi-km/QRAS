@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 //import 'package:qr_code_scanner/qr_code_scanner.dart';
 import 'package:gsheets/gsheets.dart';
+import 'package:qr4/Pages/face_verification.dart';
 import 'success.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'qr_overlay.dart';
@@ -117,10 +118,11 @@ void process(List<String> qrCodeList) async {
 
   // Add the roll number to the list
   qrCodeList.add(widget.rollNo);
-  debugPrint("AAAAAA");
+
 
   // Update the Google Sheet
-  await updateGoogleSheet(qrCodeList);
+  // await updateGoogleSheet(qrCodeList);
+  await sendAttendenceRequest(qrCodeList, widget.rollNo);
 }
 
   int _getListSizeFromFirstLetter(String firstLetter) {
@@ -130,71 +132,36 @@ void process(List<String> qrCodeList) async {
 
 
 
+  Future<void> sendAttendenceRequest(List<String> qrCodeList, String rollNo) async{
+    try{
+      
 
-  Future<void> updateGoogleSheet(List<String> qrCodeList) async {
-    try {
-      // Initialize GSheets with credentials
-      const credentials = _credentials;
-      final gsheets = GSheets(credentials);
-      for (final barcodea in qrCodeList) {
-        debugPrint('list: $barcodea');
-      }
+      bool result = await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => FaceRecognitionPage(userId: rollNo),
+        ),
+      );
 
-
-      // As summing qrCodeList contains Spreadsheet ID at index 0 and date at index 1
-      final spreadsheetId = qrCodeList[0];
-      final date = qrCodeList[1];
-      final pin = qrCodeList[2];
-
-
-      // Open the spreadsheet
-      final ss = await gsheets.spreadsheet(spreadsheetId);
-
-      // Get the sheet (assuming it's the first sheet)
-      final sheet = ss.sheets[0];
-
-      // Find the row index for rollNo
-      int row = 1; // Start from the first row
-      int flag =0;
-      final rollNoColumn = await sheet.values.column(1);
-      for (final cellValue in rollNoColumn) {
-        if (cellValue.toLowerCase() == widget.rollNo.toLowerCase()) {
-          flag =1;
-          break;
-        }
-        row++;
-      }
-
-      if (flag == 0){
-        await sheet.values.insertValue(widget.rollNo.toUpperCase(), column: 1, row: row);
-      }
-      debugPrint("$row");
-
-      // Find the column index for date
-      int col = 1; // Start from the first column
-      final dateRow = await sheet.values.row(1);
-      for (final cellValue in dateRow) {
-        if (cellValue == date) {
-          break;
-        }
-        col++;
-      }
-      debugPrint("$col");
-
-
-      // Update the cell with 'P'
-
-      if ((await sheet.values.value(column: col, row: 2) == pin) || await sheet.values.value(column: col+1, row: 2) == pin) {
-        await sheet.values.insertValue('P', column: col, row: row);
-        if (!context.mounted) return;
+      if(!result){
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => const SuccessPage(attendanceMarked: true),
+            builder: (context) => const SuccessPage(attendanceMarked: false),
           ),
         );
-      } else {
-        if (!context.mounted) return;
+
+      }
+      else{
+        /*
+
+      CODE TO SEND REQUEST TO THE FLASK SERVER
+      for attendence recording and flagging late submissions
+
+       */
+
+
+
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -202,16 +169,103 @@ void process(List<String> qrCodeList) async {
           ),
         );
       }
-    } catch (e) {
-      debugPrint('Error updating Google Sheet: $e');
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const SuccessPage(attendanceMarked: false),
-        ),
-      );
+
+
     }
+    catch(e){
+      Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SuccessPage(attendanceMarked: false),
+                ),
+              );
+    }
+
+
+
   }
+
+  // Future<void> updateGoogleSheet(List<String> qrCodeList) async {
+  //   try {
+  //     // Initialize GSheets with credentials
+  //     const credentials = _credentials;
+  //     final gsheets = GSheets(credentials);
+  //     for (final barcodea in qrCodeList) {
+  //       debugPrint('list: $barcodea');
+  //     }
+  //
+  //
+  //     // As summing qrCodeList contains Spreadsheet ID at index 0 and date at index 1
+  //     final spreadsheetId = qrCodeList[0];
+  //     final date = qrCodeList[1];
+  //     final pin = qrCodeList[2];
+  //
+  //
+  //     // Open the spreadsheet
+  //     final ss = await gsheets.spreadsheet(spreadsheetId);
+  //
+  //     // Get the sheet (assuming it's the first sheet)
+  //     final sheet = ss.sheets[0];
+  //
+  //     // Find the row index for rollNo
+  //     int row = 1; // Start from the first row
+  //     int flag =0;
+  //     final rollNoColumn = await sheet.values.column(1);
+  //     for (final cellValue in rollNoColumn) {
+  //       if (cellValue.toLowerCase() == widget.rollNo.toLowerCase()) {
+  //         flag =1;
+  //         break;
+  //       }
+  //       row++;
+  //     }
+  //
+  //     if (flag == 0){
+  //       await sheet.values.insertValue(widget.rollNo.toUpperCase(), column: 1, row: row);
+  //     }
+  //     debugPrint("$row");
+  //
+  //     // Find the column index for date
+  //     int col = 1; // Start from the first column
+  //     final dateRow = await sheet.values.row(1);
+  //     for (final cellValue in dateRow) {
+  //       if (cellValue == date) {
+  //         break;
+  //       }
+  //       col++;
+  //     }
+  //     debugPrint("$col");
+  //
+  //
+  //     // Update the cell with 'P'
+  //
+  //     if ((await sheet.values.value(column: col, row: 2) == pin) || await sheet.values.value(column: col+1, row: 2) == pin) {
+  //       await sheet.values.insertValue('P', column: col, row: row);
+  //       if (!context.mounted) return;
+  //       Navigator.push(
+  //         context,
+  //         MaterialPageRoute(
+  //           builder: (context) => const SuccessPage(attendanceMarked: true),
+  //         ),
+  //       );
+  //     } else {
+  //       if (!context.mounted) return;
+  //       Navigator.push(
+  //         context,
+  //         MaterialPageRoute(
+  //           builder: (context) => const SuccessPage(attendanceMarked: false),
+  //         ),
+  //       );
+  //     }
+  //   } catch (e) {
+  //     debugPrint('Error updating Google Sheet: $e');
+  //     Navigator.push(
+  //       context,
+  //       MaterialPageRoute(
+  //         builder: (context) => const SuccessPage(attendanceMarked: false),
+  //       ),
+  //     );
+  //   }
+  // }
 
   @override
   void dispose() {
